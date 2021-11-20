@@ -1,0 +1,1 @@
+mlrose is not available via conda so install pip in your conda environment and call that to install mlrose `<path-to-pip-in-env> install package`. For example `miniconda3\envs\conda_env\bin\pip install mlrose-hiive`. Note that the original mlrose is not maintained so use mlrose_hiive.
