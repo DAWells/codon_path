@@ -107,6 +107,18 @@ def vec2dna(i, vec, aa):
     codon_i = subtab.loc[vec[i]]['Codon pair'][:3]
     return codon_i
 
+def vec2score(i, vec, aa):
+    subtab = get_subtab(i, aa)
+    score = subtab['CPS'].loc[vec[i]]
+    return score
+
+def total_score(vec, aa):
+    score_vector = [vec2score(i, vec, aa) for i in range(len(vec))]
+    # drop final element which is just padding
+    score_vector = score_vector[:-1]
+    score = sum(score_vector)
+    return score
+
 #########################
 #                       #
 #   Prepare Codon Pair  #
@@ -148,8 +160,11 @@ aa = dna.translate()
 
 assert not "*" in aa, "Stop codons not handled"
 
-#####################
-#####################
+########################
+#                      #
+#      Examples        #
+#                      #
+#########################
 
 #   DNA sequence    #
 #   to 1D vector    #
@@ -165,3 +180,6 @@ assert Seq("".join([vec2dna(i, vec, aa) for i in range(len(vec))])) == dna, "vec
 #   1D vector   #
 #   to score    #
 
+[vec2score(i, vec, aa) for i in range(len(vec))]
+
+total_score(vec, aa)
