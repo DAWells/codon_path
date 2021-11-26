@@ -108,11 +108,32 @@ def vec2dna(i, vec, aa):
     return codon_i
 
 def vec2score(i, vec, aa):
+    """Get score for the pair of codons `i` and `i+1`.
+
+    Args:
+        i (int): Index of the codon in `vec`.
+        vec (list): List of integers representing the codons in aa.
+        aa (seq): Amino acid sequence equivelent of `vec`.
+
+    Returns:
+        float: Score for codon pair `i` and `i+1`.
+    """
     subtab = get_subtab(i, aa)
     score = subtab['CPS'].loc[vec[i]]
     return score
 
 def total_score(vec, aa):
+    """Calculates total score for vector. Ignores the final
+    element which is for padding anyway.
+
+    Args:
+        vec (list): List of integers representing the DNA
+        equivalent of aa
+        aa (Seq): Amino acid sequence of `vec`.
+
+    Returns:
+        float: Total codon pair bias score for `vec`.
+    """
     score_vector = [vec2score(i, vec, aa) for i in range(len(vec))]
     # drop final element which is just padding
     score_vector = score_vector[:-1]
@@ -164,7 +185,7 @@ assert not "*" in aa, "Stop codons not handled"
 #                      #
 #      Examples        #
 #                      #
-#########################
+########################
 
 #   DNA sequence    #
 #   to 1D vector    #
@@ -183,3 +204,4 @@ assert Seq("".join([vec2dna(i, vec, aa) for i in range(len(vec))])) == dna, "vec
 [vec2score(i, vec, aa) for i in range(len(vec))]
 
 total_score(vec, aa)
+
