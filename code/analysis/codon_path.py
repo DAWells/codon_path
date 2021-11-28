@@ -157,7 +157,7 @@ def vec2dna(i, vec, aa):
     codon_i = subtab.loc[vec[i]]['Codon pair'][:3]
     return codon_i
 
-def vec2score(i, vec, aa, invalid_score=-1):
+def vec2score(i, vec, aa):
     """Get score for the pair of codons `i` and `i+1`.
 
     Args:
@@ -171,13 +171,8 @@ def vec2score(i, vec, aa, invalid_score=-1):
         float: Score for codon pair `i` and `i+1`.
     """
     subtab = get_subtab(i, aa)
-    # If vector is in subtab
-    if vec[i] < subtab.shape[0]:
-        # get the score
-        score = subtab['CPS'].loc[vec[i]]
-    else:
-        # Else return invalid score
-        score = invalid_score
+    # get the score, % wraps vector element to a row in subtab
+    score = subtab['CPS'].loc[vec[i]%subtab.shape[0]]
     return score
 
 def total_score(vec, aa=aa):
@@ -254,6 +249,7 @@ sa_state, sa_fitness, sa_curve = mlrose.simulated_annealing(
     random_state = 1)
 
 # Solve problem using genetic algorithm
+# Very slow
 ga_state, ga_fitness, ga_curve = mlrose.genetic_alg(
     problem,
     max_attempts=10, max_iters=1000,
