@@ -51,6 +51,9 @@ cpb.groupby(by=['AA pair']).size().sort_values()
 # 'AA pair', 'Codon pair', 'Expected', 'Observed', 'Observed/Expected', 'CPS',
 #  'AA1', 'AA2', 'Codon1', 'Codon2'
 
+# Table of just Codon Bias
+cb = cpb[['AA1', 'Codon1']].drop_duplicates()
+
 #####################
 #                   #
 #       Set up      #
