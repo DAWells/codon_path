@@ -172,9 +172,11 @@ def vec2dna(i, vec, aa):
     # return codon_i
 
 def vec2score(i, vec, aa):
-    codon_i = get_subsc(i, aa)['Codon1'].loc[vec[i]]
+    subsc = get_subsc(i, aa)
+    codon_i = subsc['Codon1'].loc[vec[i]%subsc.shape[0]]
     if i+ 1< len(aa):
-        next_codon = get_subsc(i+1, aa)['Codon1'].loc[vec[i+1]]
+        subsc = get_subsc(i+1, aa)
+        next_codon = subsc['Codon1'].loc[vec[i+1]%subsc.shape[0]]
     else:
         next_codon = "AAA"
     codon_pair = codon_i + next_codon
