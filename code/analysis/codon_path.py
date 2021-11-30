@@ -51,8 +51,8 @@ cpb.groupby(by=['AA pair']).size().sort_values()
 # 'AA pair', 'Codon pair', 'Expected', 'Observed', 'Observed/Expected', 'CPS',
 #  'AA1', 'AA2', 'Codon1', 'Codon2'
 
-# Table of just Codon Bias
-cb = cpb[['AA1', 'Codon1']].drop_duplicates()
+# Table of just Single Codons
+sc = cpb[['AA1', 'Codon1']].drop_duplicates()
 
 #####################
 #                   #
@@ -126,41 +126,60 @@ def get_codon_pair(i, dna, aa):
         codon_pair = dna[(3*i):] + "AAA"
     return codon_pair
 
+def get_subsc(i, aa):
+    subsc = sc[sc['AA1']==aa[i]].reset_index()
+    return subsc
+
 def dna2vec(i, dna, aa):
-    """Convert codon i of DNA sequence into
-        int for 1D vector for mlRose
+    subsc = get_subsc(i, aa)
+    codon_i = dna[(3*i):(3*i+3)]
+    index = subsc[subsc['Codon1']==codon_i].index.values.astype(int)[0]
+    return index
+    # """Convert codon i of DNA sequence into
+    #     int for 1D vector for mlRose
 
-    Args:
-        i (int): Zero indexed position in Aa sequence
-        dna (Seq): DNA sequence
-        aa (Seq): Amino acid sequence
+    # Args:
+    #     i (int): Zero indexed position in Aa sequence
+    #     dna (Seq): DNA sequence
+    #     aa (Seq): Amino acid sequence
 
-    Returns:
-        int: index of subtab corresponding to position i in subtab
-    """
-    subtab = get_subtab(i, aa)
-    # Subset DNA sequence for codon i and i+1
-    codon_pair = get_codon_pair(i, dna, aa)
-    # Get index of codon_pair in subtab
-    cpi = subtab[subtab['Codon pair'] == codon_pair].index.values.astype(int)[0]
-    return cpi
+    # Returns:
+    #     int: index of subtab corresponding to position i in subtab
+    # """
+    # subtab = get_subtab(i, aa)
+    # # Subset DNA sequence for codon i and i+1
+    # codon_pair = get_codon_pair(i, dna, aa)
+    # # Get index of codon_pair in subtab
+    # cpi = subtab[subtab['Codon pair'] == codon_pair].index.values.astype(int)[0]
+    # return cpi
 
 def vec2dna(i, vec, aa):
-    """Convert element i of 1D vector into DNA codon
-
-    Args:
-        i (int): Zero indexed position in Aa sequence
-        dna (Seq): DNA sequence
-        aa (Seq): Amino acid sequence
-
-    Returns:
-        str: Codon at position i in vec
-    """
-    subtab = get_subtab(i, aa)
-    codon_i = subtab.loc[vec[i]]['Codon pair'][:3]
+    subsc = get_subsc(i, aa)
+    codon_i = subsc.loc[vec[i]]['Codon1']
     return codon_i
+    # """Convert element i of 1D vector into DNA codon
+
+    # Args:
+    #     i (int): Zero indexed position in Aa sequence
+    #     dna (Seq): DNA sequence
+    #     aa (Seq): Amino acid sequence
+
+    # Returns:
+    #     str: Codon at position i in vec
+    # """
+    # subtab = get_subtab(i, aa)
+    # codon_i = subtab.loc[vec[i]]['Codon pair'][:3]
+    # return codon_i
 
 def vec2score(i, vec, aa):
+    codon_i = get_subsc(i, aa)['Codon1'].loc[vec[i]]
+    if i+ 1< len(aa):
+        next_codon = get_subsc(i+1, aa)['Codon1'].loc[vec[i+1]]
+    else:
+        next_codon = "AAA"
+    codon_pair = codon_i + next_codon
+    score = cpb[cpb['Codon pair']==codon_pair]['CPS'].values[0]
+    return score
     """Get score for the pair of codons `i` and `i+1`.
 
     Args:
