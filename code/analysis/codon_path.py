@@ -70,45 +70,55 @@ aa = dna.translate()
 assert not "*" in aa, "Stop codons not handled"
 
 
-def get_next_aa(i, aa):
-    """Get the amino acid at position i+1.
-    If there isn't one return A to prevent errors.
+def get_subsc(i, aa):
+    """Subset Single Codon table to get codons for the aa at position i
 
     Args:
         i (int): Zero indexed position in Aa sequence
         aa (Seq): Amino acid sequence
 
     Returns:
-        str: Single Amino acid
+        pd.DataFrame: Subset of Single Codon table (sc) for the selected amino acid
     """
-    # If there is a next aa, use that
+    subsc = sc[sc['AA1']==aa[i]].reset_index()
+    return subsc
+
+def wrap_vector(v, subsc):
+    """Wrap element of vector to size of subsc so no value is outside the table
+
+    Args:
+        v (int): Element of vec
+        subsc (pd.DataFrame): Table of codons for a given amino acid
+
+    Returns:
+        int: A valid index for subsc
+    """
+    wrapped_v = v%subsc.shape[0]
+    return wrapped_v
+
+def get_next_codon(i, vec, aa):
+    """Get the codon at position i+1.
+    If there isn't one return AAA to prevent errors.
+
+    Args:
+        i (int): Zero indexed position in Aa sequence
+        vec (list): Vector representation of DNA, list of numbers.
+        aa (Seq): Amino acid sequence
+
+    Returns:
+        str: Single codon
+    """
     if i+1 < len(aa):
-        next_aa = aa[i+1]
-    # Else use K (AAA), so that get_subtab returns a valid table
+        subsc = get_subsc(i+1, aa)
+        wrapped_v = wrap_vector(vec[i+1], subsc)
+        next_codon = subsc['Codon1'].loc[wrapped_v]
     else:
-        next_aa = "K"
-    return next_aa
+        next_codon = "AAA"
+    return next_codon
 
-def get_subtab(i, aa):
-    """Subset codon pair bias table for the Aa pair
-    at position i and i+1 in aa
-
-    Args:
-        i (int): Zero indexed position in Aa sequence
-        aa (Seq): Amino acid sequence
-
-    Returns:
-        pd.DataFrame: Subset of codon pair bias table
-        that matches i and i+1 in aa
-    """
-    # Get the next amino acid
-    next_aa = get_next_aa(i, aa)
-    # Subset cpb table based on the Aa at position i and i+1
-    subtab = cpb[(cpb['AA1'] == aa[i]) & (cpb['AA2'] == next_aa)].reset_index()
-    return subtab
-
-def get_codon_pair(i, dna, aa):
-    """Returns the codon pair at position i:i+1 in dna
+def dna2vec(i, dna, aa):
+    """Convert codon i of DNA sequence into
+        int for 1D vector for mlRose
 
     Args:
         i (int): Zero indexed position in Aa sequence
@@ -116,87 +126,45 @@ def get_codon_pair(i, dna, aa):
         aa (Seq): Amino acid sequence
 
     Returns:
-        str: Codon pair
+        int: index of subsc corresponding to the codon at position i in aa
     """
-    # If there is a next aa, use that codon
-    if i+1 < len(aa):
-        codon_pair = dna[(3*i):3*(i+2)]
-    # Else use AAA, so that a unique cpi can be selected
-    else:
-        codon_pair = dna[(3*i):] + "AAA"
-    return codon_pair
-
-def get_subsc(i, aa):
-    subsc = sc[sc['AA1']==aa[i]].reset_index()
-    return subsc
-
-def dna2vec(i, dna, aa):
     subsc = get_subsc(i, aa)
     codon_i = dna[(3*i):(3*i+3)]
     index = subsc[subsc['Codon1']==codon_i].index.values.astype(int)[0]
     return index
-    # """Convert codon i of DNA sequence into
-    #     int for 1D vector for mlRose
-
-    # Args:
-    #     i (int): Zero indexed position in Aa sequence
-    #     dna (Seq): DNA sequence
-    #     aa (Seq): Amino acid sequence
-
-    # Returns:
-    #     int: index of subtab corresponding to position i in subtab
-    # """
-    # subtab = get_subtab(i, aa)
-    # # Subset DNA sequence for codon i and i+1
-    # codon_pair = get_codon_pair(i, dna, aa)
-    # # Get index of codon_pair in subtab
-    # cpi = subtab[subtab['Codon pair'] == codon_pair].index.values.astype(int)[0]
-    # return cpi
 
 def vec2dna(i, vec, aa):
+    """Convert element i of 1D vector into DNA codon
+
+    Args:
+        i (int): Zero indexed position in Aa sequence
+        dna (Seq): DNA sequence
+        aa (Seq): Amino acid sequence
+
+    Returns:
+        str: Codon at position i in vec
+    """
     subsc = get_subsc(i, aa)
     codon_i = subsc.loc[vec[i]]['Codon1']
     return codon_i
-    # """Convert element i of 1D vector into DNA codon
-
-    # Args:
-    #     i (int): Zero indexed position in Aa sequence
-    #     dna (Seq): DNA sequence
-    #     aa (Seq): Amino acid sequence
-
-    # Returns:
-    #     str: Codon at position i in vec
-    # """
-    # subtab = get_subtab(i, aa)
-    # codon_i = subtab.loc[vec[i]]['Codon pair'][:3]
-    # return codon_i
 
 def vec2score(i, vec, aa):
-    subsc = get_subsc(i, aa)
-    codon_i = subsc['Codon1'].loc[vec[i]%subsc.shape[0]]
-    if i+ 1< len(aa):
-        subsc = get_subsc(i+1, aa)
-        next_codon = subsc['Codon1'].loc[vec[i+1]%subsc.shape[0]]
-    else:
-        next_codon = "AAA"
-    codon_pair = codon_i + next_codon
-    score = cpb[cpb['Codon pair']==codon_pair]['CPS'].values[0]
-    return score
     """Get score for the pair of codons `i` and `i+1`.
 
     Args:
         i (int): Index of the codon in `vec`.
         vec (list): List of integers representing the codons in aa.
         aa (seq): Amino acid sequence equivelent of `vec`.
-        invalid_score (int): The score returned if the vector
-        element is not in subtab.
 
     Returns:
         float: Score for codon pair `i` and `i+1`.
     """
-    subtab = get_subtab(i, aa)
-    # get the score, % wraps vector element to a row in subtab
-    score = subtab['CPS'].loc[vec[i]%subtab.shape[0]]
+    subsc = get_subsc(i, aa)
+    wrapped_v = wrap_vector(vec[i], subsc)
+    codon_i = subsc['Codon1'].loc[wrapped_v]
+    next_codon = get_next_codon(i, vec, aa)
+    codon_pair = codon_i + next_codon
+    score = cpb[cpb['Codon pair']==codon_pair]['CPS'].values[0]
     return score
 
 def total_score(vec, aa=aa):
