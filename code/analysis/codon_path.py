@@ -187,12 +187,6 @@ def total_score(vec, aa=aa):
     score = sum(score_vector)
     return score
 
-# def greedy(i, aa):
-#     subtab = get_subtab(i, aa)
-#     # Get highest scoring 
-#     np.whichmax(subtab['CPS'])
-#     ...
-
 ########################
 #                      #
 #      Examples        #
