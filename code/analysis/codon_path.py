@@ -54,6 +54,8 @@ cpb.groupby(by=['AA pair']).size().sort_values()
 # Table of just Single Codons
 sc = cpb[['AA1', 'Codon1']].drop_duplicates()
 
+sc.groupby(by=["AA1"]).size().sort_values()
+
 #####################
 #                   #
 #       Set up      #
@@ -226,7 +228,7 @@ problem = mlrose.DiscreteOpt(
     length=len(aa),
     fitness_fn=fitness_cust,
     maximize=True,
-    max_val=36
+    max_val=6
 )
 
 # Use wildtype as initial state
