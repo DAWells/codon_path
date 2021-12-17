@@ -187,9 +187,43 @@ def total_score(vec, aa=aa):
     score = sum(score_vector)
     return score
 
+#####################
+#                   #
+#       Greedy      #
+#     Functions     #
+#                   #
+#####################
+
+def start_codon_greedy(aa):
+    assert len(aa) > 1, "aa must be longer than 1"
+    # Filter cpb to codon pairs which give the first two amino acids of aa
+    subtab = cpb[(cpb.AA1==aa[0]) & (cpb.AA2==aa[1])]
+    # Get the codon 1 which gives the highest score
+    start_codon = subtab['Codon1'].loc[subtab.CPS.idxmax()]
+    return start_codon
+
+def grow_greedy(dna, aa):
+    codon1 = dna[-3:]
+    assert len(dna)%3 == 0, "DNA length not divisible by 3, reading frame error"
+    i = int(len(dna)/3)
+    # Subsample cpb table to those with the previous codon and the next aa
+    subtab = cpb[
+        (cpb['Codon1'] == codon1) &
+        (cpb['AA2'] == aa[i])
+    ]
+    next_codon = subtab['Codon2'].loc[subtab.CPS.idxmax()]
+    return next_codon
+
+def create_greedna(aa):
+    greedna = start_codon_greedy(aa)
+    for position in aa[1:]:
+        greedna = greedna + grow_greedy(greedna, aa)
+    return greedna
+
 ########################
 #                      #
-#      Examples        #
+#      Create and      #
+#    Check vectors     #
 #                      #
 ########################
 
@@ -205,9 +239,18 @@ assert Seq("".join([vec2dna(i, vec, aa) for i in range(len(vec))])) == dna, "vec
 
 #   1D vector   #
 #   to score    #
-
 [vec2score(i, vec, aa) for i in range(len(vec))]
 total_score(vec, aa)
+
+#   Create greey DNA    #
+#   and check it        #
+greedna = create_greedna(aa)
+assert Seq(greedna).translate() == aa, "greedy DNA does not translate to aa"
+
+#   Create vector   #
+#   from greedna    #
+greedy_vec = [dna2vec(i, greedna, aa) for i in range(len(aa))]
+
 
 ########################
 #                      #
@@ -225,14 +268,12 @@ problem = mlrose.DiscreteOpt(
     max_val=6
 )
 
-# Use wildtype as initial state
-vec = [dna2vec(i, dna, aa) for i in range(len(aa))]
-
 # Solve problem using simulated annealing
 sa_state, sa_fitness, sa_curve = mlrose.simulated_annealing(
     problem, mlrose.ExpDecay(),
     curve=True,
     max_attempts = 10, max_iters = 1000,
+    # Use wildtype as initial state
     init_state=vec,
     random_state = 1)
 
@@ -254,5 +295,6 @@ plt.show()
 
 plt.plot(np.cumsum([vec2score(i, sa_state, aa) for i in range(len(sa_state))]))
 plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]))
+plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]))
 plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]))
 plt.show()
