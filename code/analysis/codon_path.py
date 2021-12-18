@@ -169,6 +169,12 @@ def vec2score(i, vec, aa):
     score = cpb[cpb['Codon pair']==codon_pair]['CPS'].values[0]
     return score
 
+def calc_offset(vec):
+    """ Calculate offset required to guarentee that score is positive
+    """
+    offset = abs(cpb.CPS.min()) * len(vec)
+    return offset
+
 def total_score(vec, aa=aa):
     """Calculates total score for vector. Ignores the final
     element which is for padding anyway.
@@ -185,7 +191,8 @@ def total_score(vec, aa=aa):
     # drop final element which is just padding
     score_vector = score_vector[:-1]
     score = sum(score_vector)
-    return score
+    offset = calc_offset(vec)
+    return score + offset
 
 #####################
 #                   #
@@ -279,22 +286,28 @@ sa_state, sa_fitness, sa_curve = mlrose.simulated_annealing(
 
 # Solve problem using genetic algorithm
 # Very slow
+#To avoid rerunning the outputs were saved for hpv16_e5
+# ga_curve = pd.read_csv("data/processed/ga_curve.csv").values
+# ga_state = pd.read_csv("data/processed/ga_state.csv")['0'].values
+
 ga_state, ga_fitness, ga_curve = mlrose.genetic_alg(
     problem,
     max_attempts=10, max_iters=1000,
     curve=True,
-    random_state=1
+    random_state=2
 )
 
+
 # Plot fitness over training
-plt.plot(sa_curve[:, 0])
-plt.plot(ga_curve[:, 0])
+plt.plot(sa_curve[:, 0] - calc_offset(aa))
+plt.plot(ga_curve[:, 0] - calc_offset(aa))
 plt.show()
 
 # Plot cumulative fitness
-
 plt.plot(np.cumsum([vec2score(i, sa_state, aa) for i in range(len(sa_state))]))
 plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]))
 plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]))
 plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]))
 plt.show()
+
+
