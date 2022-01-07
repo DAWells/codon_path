@@ -311,3 +311,26 @@ plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]))
 plt.show()
 
 
+plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]),
+    label="Genetic Algorithm")
+plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]),
+    label="Greedy algorithm")
+plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]),
+    label="Natural")
+plt.legend()
+plt.show()
+
+#############
+#############
+# Illustrate problem space
+# On average 3 possible codons per amino acid
+sc.groupby(by=["AA1"]).size().sort_values().mean()
+
+# Therefore possible DNA sequences for a amino acid
+# sequence of length L is 3^L
+
+x = 3 ** np.arange(1, 10)
+plt.plot(x)
+plt.show()
+
+
