@@ -20,3 +20,5 @@ It would be possible to extend this by setting additional constraints, e.g. excl
 	Coleman, J. R., Papamichail, D., Skiena, S., Futcher, B., Wimmer, E., & Mueller, S. (2008). Virus attenuation by genome-scale changes in codon pair bias. Science, 320(5884), 1784–1787. https://doi.org/10.1126/science.1155761
 
 	Li, G., Ward, C., Yeasmin, R., Skiena, S., Krug, L. T., & Forrest, J. C. (2017). A codon-shuffling method to prevent reversion during production of replication-defective herpesvirus stocks: Implications for herpesvirus vaccines. Scientific Reports, 7(January), 1–9. https://doi.org/10.1038/srep44404
+
+	Human codon frequency table: https://www.genscript.com/tools/codon-frequency-table
