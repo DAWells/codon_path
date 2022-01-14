@@ -196,6 +196,59 @@ def total_score(vec, aa=aa):
 
 #####################
 #                   #
+#      Penalty      #
+#     Functions     #
+#                   #
+#####################
+# Functions implemented to illustrate the efficiency gains
+# of modulo wrapping rather than using a penalty.
+
+penalty = -2
+
+def vec2penaltyscore(i, vec, aa, penalty=penalty):
+    """Get score for the pair of codons `i` and `i+1`.
+    Rather than wrapping invalid codons to valid ones,
+    returns a penalty score.
+
+    Args:
+        i (int): Index of the codon in `vec`.
+        vec (list): List of integers representing the codons in aa.
+        aa (seq): Amino acid sequence equivelent of `vec`.
+
+    Returns:
+        float: Score for codon pair `i` and `i+1`.
+    """
+    subsc = get_subsc(i, aa)
+    if vec[i] >= subsc.shape[0]:
+        return penalty
+    wrapped_v = vec[i]
+    codon_i = subsc['Codon1'].loc[wrapped_v]
+    next_codon = get_next_codon(i, vec, aa)
+    codon_pair = codon_i + next_codon
+    score = cpb[cpb['Codon pair']==codon_pair]['CPS'].values[0]
+    return score
+
+def total_penaltyscore(vec, aa=aa):
+    """Calculates total penalty score for vector. Ignores the final
+    element which is for padding anyway.
+
+    Args:
+        vec (list): List of integers representing the DNA
+        equivalent of aa
+        aa (Seq): Amino acid sequence of `vec`.
+
+    Returns:
+        float: Total codon pair bias score for `vec`.
+    """
+    score_vector = [vec2penaltyscore(i, vec, aa) for i in range(len(vec))]
+    # drop final element which is just padding
+    score_vector = score_vector[:-1]
+    score = sum(score_vector)
+    offset = calc_offset(vec)
+    return score + offset
+
+#####################
+#                   #
 #       Greedy      #
 #     Functions     #
 #                   #
@@ -259,6 +312,11 @@ assert Seq(greedna).translate() == aa, "greedy DNA does not translate to aa"
 greedy_vec = [dna2vec(i, greedna, aa) for i in range(len(aa))]
 
 
+#   1D vector   #
+#   to penalty score    #
+[vec2penaltyscore(i, vec, aa) for i in range(len(vec))]
+total_penaltyscore(vec, aa)
+
 ########################
 #                      #
 #       mlRose         #
@@ -297,10 +355,43 @@ ga_state, ga_fitness, ga_curve = mlrose.genetic_alg(
     random_state=2
 )
 
+#   Run genetic algorithm using penalty function
+#   Instead of modulo wrapping
+
+# Initialize custom fitness function object
+fitness_penalty = mlrose.CustomFitness(total_penaltyscore)
+# Define problem
+problem_penalty = mlrose.DiscreteOpt(
+    length=len(aa),
+    fitness_fn=fitness_penalty,
+    maximize=True,
+    max_val=6
+)
+
+# ga_pen_curve = pd.read_csv("data/processed/ga_pen_curve.csv").values
+# ga_pen_state = pd.read_csv("data/processed/ga_pen_stat.csv")['0'].values
+
+ga_pen_state, ga_pen_fitness, ga_pen_curve = mlrose.genetic_alg(
+    problem_penalty,
+    max_attempts=10, max_iters=1000,
+    curve=True,
+    random_state=2
+)
+
+# Which elments of ga_pen_state incurs a penalty? none?
+[x for i,x in enumerate(ga_pen_state) if vec2penaltyscore(i, ga_pen_state, aa) == penalty]
+min([vec2penaltyscore(i, ga_pen_state, aa) for i in range(len(aa))])
+
+#####################
+#                   #
+#       Plots       #
+#                   #
+#####################
 
 # Plot fitness over training
 # plt.plot(sa_curve[:, 0] - calc_offset(aa))
 plt.plot(ga_curve[:, 0] - calc_offset(aa), label="Genetic algorithm")
+plt.plot(ga_pen_curve[:, 0] - calc_offset(aa), label="Genetic algorithm, penalty")
 plt.plot([total_score(vec) - calc_offset(aa)] * ga_curve.shape[0], label="Natural")
 plt.xlabel('Training generation')
 plt.ylabel('Solution score')
@@ -314,11 +405,20 @@ plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))
 plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]))
 plt.show()
 
+# Plot cumulative fitness comparing ga variants
+plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]))
+# It doesn't matter if we use the vec2score or vec2penalty score
+# because the ga_pen_state incurs no penalties
+plt.plot(np.cumsum([vec2score(i, ga_pen_state, aa) for i in range(len(ga_pen_state))]))
+plt.plot(np.cumsum([vec2penaltyscore(i, ga_pen_state, aa) for i in range(len(ga_pen_state))]))
+plt.show()
 
 plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]),
     label="Genetic Algorithm")
 # plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]),
     # label="Greedy algorithm")
+plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]),
+    label="Genetic Algorithm penalty")
 plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]),
     label="Natural")
 plt.xlabel("Position in sequence")
