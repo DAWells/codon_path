@@ -299,8 +299,12 @@ ga_state, ga_fitness, ga_curve = mlrose.genetic_alg(
 
 
 # Plot fitness over training
-plt.plot(sa_curve[:, 0] - calc_offset(aa))
-plt.plot(ga_curve[:, 0] - calc_offset(aa))
+# plt.plot(sa_curve[:, 0] - calc_offset(aa))
+plt.plot(ga_curve[:, 0] - calc_offset(aa), label="Genetic algorithm")
+plt.plot([total_score(vec) - calc_offset(aa)] * ga_curve.shape[0], label="Natural")
+plt.xlabel('Training generation')
+plt.ylabel('Solution score')
+plt.legend()
 plt.show()
 
 # Plot cumulative fitness
@@ -313,10 +317,12 @@ plt.show()
 
 plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]),
     label="Genetic Algorithm")
-plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]),
-    label="Greedy algorithm")
+# plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]),
+    # label="Greedy algorithm")
 plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]),
     label="Natural")
+plt.xlabel("Position in sequence")
+plt.ylabel("Cumulative score")
 plt.legend()
 plt.show()
 
