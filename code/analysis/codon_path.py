@@ -388,21 +388,34 @@ min([vec2penaltyscore(i, ga_pen_state, aa) for i in range(len(aa))])
 #                   #
 #####################
 
+plt.style.use('fivethirtyeight')
+
 # Plot fitness over training
 # plt.plot(sa_curve[:, 0] - calc_offset(aa))
-plt.plot(ga_curve[:, 0] - calc_offset(aa), label="Genetic algorithm")
-plt.plot(ga_pen_curve[:, 0] - calc_offset(aa), label="Genetic algorithm, penalty")
-plt.plot([total_score(vec) - calc_offset(aa)] * ga_curve.shape[0], label="Natural")
+plt.plot(ga_curve[:, 0] - calc_offset(aa), label="Genetic algorithm, modulo")
+plt.plot(ga_pen_curve[:, 0] - calc_offset(aa), label="Genetic algorithm, penalty",
+    linestyle="dashed", color="#008fd5")
+# plt.plot([total_score(vec) - calc_offset(aa)] * ga_curve.shape[0], label="Natural")
 plt.xlabel('Training generation')
 plt.ylabel('Solution score')
-plt.legend()
+# plt.axhline()
+plt.legend(loc="best")
+plt.tight_layout()
+plt.savefig("reports/figures/training_fitness.png")
 plt.show()
 
 # Plot cumulative fitness
-plt.plot(np.cumsum([vec2score(i, sa_state, aa) for i in range(len(sa_state))]))
-plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]))
-plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]))
-plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]))
+# plt.plot(np.cumsum([vec2score(i, sa_state, aa) for i in range(len(sa_state))]))
+plt.plot(np.cumsum([vec2score(i, ga_state, aa) for i in range(len(ga_state))]),
+    label="Genetic Algorithm, modulo")
+# plt.plot(np.cumsum([vec2score(i, greedy_vec, aa) for i in range(len(greedy_vec))]))
+plt.plot(np.cumsum([vec2score(i, vec, aa) for i in range(len(vec))]),
+    label="Natual gene")
+plt.legend(loc="best")
+plt.xlabel('Position in sequence')
+plt.ylabel('Cumulative score')
+plt.tight_layout()
+plt.savefig("reports/figures/cumulative_fitness.png")
 plt.show()
 
 # Plot cumulative fitness comparing ga variants
