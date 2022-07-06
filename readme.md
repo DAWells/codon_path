@@ -2,6 +2,7 @@
 
 Given an amino acid sequence and a table of codon pair bias
 find the optimal DNA sequence encoding that polypeptide.
+I wrote about this project [here](https://www.kdnuggets.com/2022/04/optimizing-genes-genetic-algorithm.html).
 
 Each individual amino acid can be encoded by a set of synonymous codons. Although synonymous, they are not used equally. Some codons occur more frequently than expected by chance, this is called codon bias.
 
