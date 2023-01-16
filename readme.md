@@ -15,7 +15,7 @@ One approach to this problem is to formulate is as a network or graph. Each vert
 
 We could find a valid path through the network by selecting the best codon pair for the first two residues and then stepping through the network one pair at a time always selecting the highest edge. However, this greedy approach will not guarentee the optimal solution. Use `mlrose` to explore alternative algorithms to solve the problem.
 
-It would be possible to extend this by setting additional constraints, e.g. excluding certain codons. This could be to codon optimise without encouraging recombination with a similar protein.
+It would be possible to extend this by setting additional constraints, e.g. excluding certain codons. This could be to codon optimise without encouraging recombination with a similar protein. This code is an exploration of genetic algorithms but for real world application the [Viterbi algorithm](https://www.youtube.com/watch?v=6JVqutwtzmo) could greatly speed up solutions.
 
 # References
 	Coleman, J. R., Papamichail, D., Skiena, S., Futcher, B., Wimmer, E., & Mueller, S. (2008). Virus attenuation by genome-scale changes in codon pair bias. Science, 320(5884), 1784–1787. https://doi.org/10.1126/science.1155761
